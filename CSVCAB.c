@@ -6,7 +6,8 @@
 
 int main(){
 
-    char provider[] = "Uber"; 
+    char provider[] = "Ola"; 
+    char AC[] = "Yes"; 
     FILE *fp = fopen("fares.csv", "r"); //opening file 
     if (!fp){//throwing an error if file not found
         perror("File couldnt not be found"); 
@@ -32,6 +33,11 @@ int main(){
         
         if (!token) continue;
         char *vehicle = token;
+
+        if(strcmp(token,AC)!=0){
+            continue;
+        }
+        token = strtok(NULL,","); 
 
         //token = strtok(NULL, ",");
         //int base = token ? atoi(token) : 0;
