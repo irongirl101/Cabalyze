@@ -41,6 +41,8 @@ surge multiplier -> based off current weather using api, surge multiplier can be
 
 compare everything based on the number of passengers, and spit out the final amount 
 
+
+note to future self, look at how everything is calculated ones, before finishing it up  
 */
 
 int main(){

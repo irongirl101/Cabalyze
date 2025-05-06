@@ -1,7 +1,6 @@
 //trying to create a 2D array, in order to easily index it, makes life easier, 
 //howver in C, we cannot have heterogenous values, therefore, tokenizing everything as a string, and then changing to int or float using atoi and atof when needed 
 
-
 //NOTE TO SELF: strcmp RETURNS A 0 WHEN TRUE 
 #include <stdio.h>
 #include <string.h>
@@ -20,14 +19,14 @@ int main(){
     printf("Do you have any preference towards provider? If yes, enter the number of providers, else enter 0.\n"); 
     scanf("%d",&provider_choice); */ 
     char provider[100]; //have to figure out a way of getting preferences-> for the time being, take one at a time 
-    printf("Enter preference if any, else type in No \n"); 
+    printf("Enter preference if any, else type No \n"); 
     //scanf("%s", provider); -> does not work, as namma aytri has a whitespace, and scanff reads till the first whitespace is found 
     //therefore use fgets 
    /* while(getchar()!='\n' && getchar() != EOF); 
     fgets(provider, sizeof(provider), stdin);//stdin helps in accepting phrases with spaves in between 
     provider[strcspn(provider, "\n")] = '\0'; */
     fgets(provider, sizeof(provider), stdin);
-provider[strcspn(provider, "\n")] = '\0'; // remove newline
+    provider[strcspn(provider, "\n")] = '\0'; // remove newline
 
     if (
         strcmp(provider, "Uber") != 0 &&
@@ -106,17 +105,26 @@ provider[strcspn(provider, "\n")] = '\0'; // remove newline
             if(strcmp(table[i][0],provider)==0 && atoi(table[i][4])>=passengers && strcmp(table[i][2], ac_choice)==0 && strcmp(table[i][3],premimum_choice)==0){
                 float total = atoi(table[i][5]) + (distance*atoi(table[i][6])) + (time*atoi(table[i][7])) + atoi(table[i][8]) ; 
                 float final = total * surge; 
-                printf("%s %s %s %s %.2f\t", table[i][0], table[i][1], table[i][2], table[i][4], final); 
+                printf( "Type: %s | Number of Passengers: %s | Estimated Price:%.2f\t", table[i][1],  table[i][4], final); 
                 //for(int j =0; j<MAX_COL && table[i][j]; j++){
                     //printf("%s\t", table[i][j]); 
                 //}
                 printf("\n"); 
             }
         }
+        else if(atoi(table[i][4])>=passengers && strcmp(table[i][2], ac_choice)==0 && strcmp(table[i][3],premimum_choice)==0){
+            float total = atoi(table[i][5]) + (distance*atoi(table[i][6])) + (time*atoi(table[i][7])) + atoi(table[i][8]) ; 
+                float final = total * surge; 
+                printf("Provider: %s | Type: %s | Number of Passengers: %s | Price: %.2f\t", table[i][0], table[i][1], table[i][4], final); 
+                //for(int j =0; j<MAX_COL && table[i][j]; j++){
+                    //printf("%s\t", table[i][j]); 
+                //}
+                printf("\n");
+        }
 
    }
 
-    // Free allocated memory
+    // free allocated memory
     for (int i = 0; i < row; i++) {
         for (int j = 0; j < MAX_COL && table[i][j]; j++) {
             free(table[i][j]);
