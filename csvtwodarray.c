@@ -1,7 +1,7 @@
 //trying to create a 2D array, in order to easily index it, makes life easier, 
 //howver in C, we cannot have heterogenous values, therefore, tokenizing everything as a string, and then changing to int or float using atoi and atof when needed 
 
-//NOTE TO SELF: strcmp RETURNS A 0 WHEN TRUE 
+//NOTE TO SELF: stricmp RETURNS A 0 WHEN TRUE 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h> 
@@ -20,7 +20,7 @@ int main(){
     scanf("%d",&provider_choice); */ 
     char provider[100]; //have to figure out a way of getting preferences-> for the time being, take one at a time 
     printf("Enter preference if any, else type No \n"); 
-    //scanf("%s", provider); -> does not work, as namma aytri has a whitespace, and scanff reads till the first whitespace is found 
+    //scanf("%s", provider); -> does not work, as namma aytri has a whitespace, and scanf reads till the first whitespace is found 
     //therefore use fgets 
    /* while(getchar()!='\n' && getchar() != EOF); 
     fgets(provider, sizeof(provider), stdin);//stdin helps in accepting phrases with spaves in between 
@@ -29,11 +29,11 @@ int main(){
     provider[strcspn(provider, "\n")] = '\0'; // remove newline
 
     if (
-        strcmp(provider, "Uber") != 0 &&
-        strcmp(provider, "Ola") != 0 &&
-        strcmp(provider, "Namma Yatri") != 0 &&
-        strcmp(provider, "No") != 0 &&
-        strcmp(provider, "no") != 0
+        strcasecmp(provider, "Uber") != 0 &&
+        strcasecmp(provider, "Ola") != 0 &&
+        strcasecmp(provider, "Namma Yatri") != 0 &&
+        strcasecmp(provider, "No") != 0 &&
+        strcasecmp(provider, "no") != 0
     ) {
         printf("Please enter an acceptable value (Uber, Ola, Namma Yatri, No)\n"); 
         return 1;
@@ -101,8 +101,8 @@ int main(){
    //my info {0:Provider,1:Vehicle Type,2:AC,3:Premium,4:Passengers,5:Base Fare (₹),6:Per Km (₹),7:Per Min (₹),8:Booking Fee (₹)}
 
    for(int i = 1; i<row; i++){
-        if(strcmp(provider, "No")!=0){
-            if(strcmp(table[i][0],provider)==0 && atoi(table[i][4])>=passengers && strcmp(table[i][2], ac_choice)==0 && strcmp(table[i][3],premimum_choice)==0){
+        if(strcasecmp(provider, "No")!=0){
+            if(strcasecmp(table[i][0],provider)==0 && atoi(table[i][4])>=passengers && strcasecmp(table[i][2], ac_choice)==0 && strcasecmp(table[i][3],premimum_choice)==0){
                 float total = atoi(table[i][5]) + (distance*atoi(table[i][6])) + (time*atoi(table[i][7])) + atoi(table[i][8]) ; 
                 float final = total * surge; 
                 printf( "Type: %s | Number of Passengers: %s | Estimated Price:%.2f\t", table[i][1],  table[i][4], final); 
@@ -112,7 +112,7 @@ int main(){
                 printf("\n"); 
             }
         }
-        else if(atoi(table[i][4])>=passengers && strcmp(table[i][2], ac_choice)==0 && strcmp(table[i][3],premimum_choice)==0){
+        else if(atoi(table[i][4])>=passengers && strcasecmp(table[i][2], ac_choice)==0 && strcasecmp(table[i][3],premimum_choice)==0){
             float total = atoi(table[i][5]) + (distance*atoi(table[i][6])) + (time*atoi(table[i][7])) + atoi(table[i][8]) ; 
                 float final = total * surge; 
                 printf("Provider: %s | Type: %s | Number of Passengers: %s | Price: %.2f\t", table[i][0], table[i][1], table[i][4], final); 
