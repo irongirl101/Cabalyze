@@ -11,7 +11,9 @@ struct memory {
     size_t size; // the size of the json data in bytes 
 };
 
+
 // Callback to write data to memory
+// size_t is a datatype used to take in size of memory 
 size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {//content: the recieved data ; size and nmemb for the size to be allocated in memory where size->size of each unit, and nmemb is the number of units ; userp is a pointer to a user made structure, in this case memory
 //why size_t write_callback ... -> this shows that these are the number of bytes the function is to return back. (this is part of syntax of libcurl)
     size_t realsize = size * nmemb; //calculation of size of data 
@@ -149,7 +151,7 @@ int main() {
             cJSON *duration = cJSON_GetObjectItem(firstSegment, "duration");
 
             if (distance && duration) {
-                printf("Distance: %.2f km\n", distance->valuedouble*1.7/ 1000.0 ); // getting distance in km, 1.7 -> for displacement discrepancy 
+                printf("Distance: %.2f km\n", distance->valuedouble*1.7/1000.0 ); // getting distance in km, 1.7 -> for displacement discrepancy 
                 printf("Duration: %.2f\n", duration->valuedouble*2.3/60); // getting duration in min, 2.3 -> time discrepancy due to displacement > distance 
             }
 
