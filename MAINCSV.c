@@ -55,8 +55,8 @@ int main(){
     scanf("%s", premimum_choice); 
 
     float surge = 0.75; // for the time being 
-    float distance = 18 ; // in km, for the time being 
-    float time = 40; //will be in minutes, for the time being 
+    float distance = 1532.53 ; // in km, for the time being 
+    float time = 1564.88; //will be in minutes, for the time being 
 
     //opening a file
     FILE *fp = fopen("fares.csv", "r"); 

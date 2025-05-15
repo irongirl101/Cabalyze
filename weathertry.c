@@ -4,163 +4,135 @@
 #include <curl/curl.h>
 #include <cjson/cJSON.h>
 
-#define WEATHER_API_KEY "1aabc40bf90d4a73a9295105251305"
-#define GEOCODING_API_KEY "5b3ce3597851110001cf6248f91e18c396fa4c6c833546932b975c1e"
+#define BUFFER_SIZE 100000
+#define ORS_API_KEY "5b3ce3597851110001cf6248f91e18c396fa4c6c833546932b975c1e"
+#define WEATHER_API_KEY "f4f88ef718484d7a89e43834251405"
 
-// Structure to hold the response from the API call
-struct memory {
-    char *response;
-    size_t size;
-};
-
-// Callback function for storing the response from the API call
 size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
-    size_t realsize = size * nmemb;
-    struct memory *mem = (struct memory *)userp;
-    char *ptr = realloc(mem->response, mem->size + realsize + 1);
-    if (!ptr) return 0;
-    mem->response = ptr;
-    memcpy(&(mem->response[mem->size]), contents, realsize);
-    mem->size += realsize;
-    mem->response[mem->size] = 0;
-    return realsize;
+    strcat((char *)userp, (char *)contents);
+    return size * nmemb;
 }
 
-// Geocoding function to get latitude and longitude from an address
-char* geocode_address(CURL *curl, const char *address) {
-    struct memory chunk = {NULL, 0};
-    
-    char url[1024];
-    char *escaped = curl_easy_escape(curl, address, 0);  // URL encode the address
-    
-    // Geocoding API request
-    snprintf(url, sizeof(url), 
-             "https://api.openrouteservice.org/geocode/search?api_key=%s&text=%s", 
-             GEOCODING_API_KEY, escaped);
-    
-    curl_free(escaped);
-    
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &chunk);
-    
-    CURLcode res = curl_easy_perform(curl);
-    if (res != CURLE_OK) {
-        fprintf(stderr, "Geocoding failed: %s\n", curl_easy_strerror(res));
-        free(chunk.response);
-        return NULL;
-    }
-
-    cJSON *json = cJSON_Parse(chunk.response);
-    if (!json) {
-        fprintf(stderr, "Failed to parse geocoding JSON\n");
-        free(chunk.response);
-        return NULL;
-    }
-
-    cJSON *features = cJSON_GetObjectItem(json, "features");
-    cJSON *first = cJSON_GetArrayItem(features, 0);
-    if (!first) {
-        fprintf(stderr, "No results found for geocoding\n");
-        cJSON_Delete(json);
-        free(chunk.response);
-        return NULL;
-    }
-
-    cJSON *geometry = cJSON_GetObjectItem(first, "geometry");
-    cJSON *coordinates = cJSON_GetObjectItem(geometry, "coordinates");
-
-    double lon = cJSON_GetArrayItem(coordinates, 0)->valuedouble;
-    double lat = cJSON_GetArrayItem(coordinates, 1)->valuedouble;
-
-    char *coords = malloc(50);
-    snprintf(coords, 50, "%.6f,%.6f", lon, lat);
-
-    cJSON_Delete(json);
-    free(chunk.response);
-    return coords;
-}
-
-// Fetch hourly weather data based on latitude and longitude
-void fetch_hourly_weather(const char *lat, const char *lon) {
+// Step 1: Geocode using OpenRouteService
+int geocode_with_ors(const char *address, char *lon, char *lat) {
     CURL *curl = curl_easy_init();
-    if (!curl) {
-        fprintf(stderr, "CURL init failed\n");
-        return;
-    }
+    if (!curl) return 0;
 
     char url[512];
     snprintf(url, sizeof(url),
-        "https://api.weatherapi.com/v1/forecast.json?key=%s&q=%s,%s&hours=24", 
-        WEATHER_API_KEY, lat, lon);
+             "https://api.openrouteservice.org/geocode/search?api_key=%s&text=%s",
+             ORS_API_KEY, address);
 
-    struct memory chunk = {malloc(1), 0};
+    char response[BUFFER_SIZE] = {0};
+
     curl_easy_setopt(curl, CURLOPT_URL, url);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &chunk);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, response);
 
-    if (curl_easy_perform(curl) != CURLE_OK) {
-        fprintf(stderr, "API request failed\n");
-        curl_easy_cleanup(curl);
-        free(chunk.response);
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+    if (res != CURLE_OK) return 0;
+
+    cJSON *root = cJSON_Parse(response);
+    if (!root) return 0;
+
+    cJSON *features = cJSON_GetObjectItem(root, "features");
+    if (!cJSON_IsArray(features) || cJSON_GetArraySize(features) == 0) {
+        cJSON_Delete(root);
+        return 0;
+    }
+
+    cJSON *geometry = cJSON_GetObjectItem(
+        cJSON_GetObjectItem(cJSON_GetArrayItem(features, 0), "geometry"), "coordinates");
+
+    // ORS returns [lon, lat]
+    snprintf(lat, 32, "%.6f", cJSON_GetArrayItem(geometry, 0)->valuedouble);
+    snprintf(lon, 32, "%.6f", cJSON_GetArrayItem(geometry, 1)->valuedouble);
+
+    cJSON_Delete(root);
+    return 1;
+}
+
+// Step 2: Fetch WeatherAPI forecast with lat/lon
+void fetch_weatherapi_forecast(const char *lat, const char *lon) {
+    
+    CURL *curl = curl_easy_init();
+    if (!curl) return;
+
+    char url[512];
+    snprintf(url, sizeof(url),
+             "http://api.weatherapi.com/v1/forecast.json?key=%s&q=%s,%s&days=1&aqi=no&alerts=no",
+             WEATHER_API_KEY, lat, lon);
+   
+    char response[BUFFER_SIZE] = {0};
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, response);
+
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+    if (res != CURLE_OK) {
+        fprintf(stderr, "Failed to fetch weather data\n");
+        return;
+    }
+    printf("RAW RESPONSE:\n%s\n", response);
+
+        cJSON *root = cJSON_Parse(response);
+    if (!root) {
+        printf("Error parsing JSON\n");
         return;
     }
 
-    cJSON *json = cJSON_Parse(chunk.response);
-    if (!json) {
-        fprintf(stderr, "Failed to parse JSON\n");
-        curl_easy_cleanup(curl);
-        free(chunk.response);
+    // Extract the hourly data array
+    cJSON *hourly = cJSON_GetObjectItemCaseSensitive(root, "hourly");
+    if (!cJSON_IsArray(hourly)) {
+        printf("Hourly data is not an array\n");
+        cJSON_Delete(root);
         return;
     }
 
-    cJSON *forecast = cJSON_GetObjectItem(json, "forecast");
-    cJSON *hourly = cJSON_GetObjectItem(forecast, "forecastday");
-    cJSON *hours = cJSON_GetArrayItem(hourly, 0); // Get the first forecast day
-    cJSON *hour_array = cJSON_GetObjectItem(hours, "hour");
+    // Loop through the array of hourly data
+    int hourly_count = cJSON_GetArraySize(hourly);
+    for (int i = 0; i < hourly_count; i++) {
+        cJSON *hour_data = cJSON_GetArrayItem(hourly, i);
 
-    if (!hour_array || !cJSON_IsArray(hour_array)) {
-        fprintf(stderr, "No hourly data found\n");
-    } else {
-        int n = cJSON_GetArraySize(hour_array);
-        for (int i = 0; i < n; ++i) {
-            cJSON *hour = cJSON_GetArrayItem(hour_array, i);
-            double temp = cJSON_GetObjectItem(hour, "temp_c")->valuedouble;
-            const char *time = cJSON_GetObjectItem(hour, "time")->valuestring;
-            const char *condition = cJSON_GetObjectItem(cJSON_GetObjectItem(hour, "condition"), "text")->valuestring;
-            printf("Hour %d: %s -> %.1f°C, %s\n", i, time, temp, condition);
+        // Extract individual fields
+        cJSON *time = cJSON_GetObjectItemCaseSensitive(hour_data, "time");
+        cJSON *temp_c = cJSON_GetObjectItemCaseSensitive(hour_data, "temp_c");
+        cJSON *condition = cJSON_GetObjectItemCaseSensitive(hour_data, "condition");
+        cJSON *text = cJSON_GetObjectItemCaseSensitive(condition, "text");
+        cJSON *wind_mph = cJSON_GetObjectItemCaseSensitive(hour_data, "wind_mph");
+
+        // Check if fields exist and print them
+        if (cJSON_IsString(time) && cJSON_IsNumber(temp_c) && cJSON_IsString(text) && cJSON_IsNumber(wind_mph)) {
+            printf("Time: %s, Temp: %.1f°C, Condition: %s, Wind Speed: %.1f mph\n",
+                   time->valuestring, temp_c->valuedouble, text->valuestring, wind_mph->valuedouble);
+        } else {
+            printf("Error extracting data for hour %d\n", i);
         }
     }
 
-    cJSON_Delete(json);
-    free(chunk.response);
-    curl_easy_cleanup(curl);
+    // Clean up
+    cJSON_Delete(root);
+
 }
 
 int main() {
-    const char *address = "Bangalore"; // Replace with any address
+    char address[256];
+    char lat[32], lon[32];
 
-    CURL *curl = curl_easy_init();
-    if (!curl) {
-        fprintf(stderr, "CURL initialization failed!\n");
+    printf("Enter location: ");
+    fgets(address, sizeof(address), stdin);
+    address[strcspn(address, "\n")] = 0; // remove newline
+
+    if (!geocode_with_ors(address, lon, lat)) {
+        fprintf(stderr, "Geocoding failed.\n");
         return 1;
     }
 
-    // Step 1: Get the coordinates for the address
-    char *coords = geocode_address(curl, address);
-    if (coords == NULL) {
-        curl_easy_cleanup(curl);
-        return 1;
-    }
+    printf("Latitude: %s | Longitude: %s\n", lon, lat);
+    fetch_weatherapi_forecast(lon, lat);
 
-    // Step 2: Get the weather for the location (latitude, longitude)
-    char *longitude = strtok(coords, ",");
-    char *latitude = strtok(NULL, ",");
-    fetch_hourly_weather(latitude, longitude);
-     
-
-    // Clean up
-    free(coords);
-    curl_easy_cleanup(curl);
     return 0;
 }
