@@ -3,9 +3,31 @@
 #include <string.h>
 #include <curl/curl.h>
 #include <cjson/cJSON.h>//used to parse the json data 
+#include "distancetry.h"
 
 #define API_KEY "5b3ce3597851110001cf6248f91e18c396fa4c6c833546932b975c1e"
 
+static double stored_distance = 0.0;
+static double stored_duration = 0.0;
+
+void set_values(double distance, double duration) {
+    stored_distance = distance;
+    stored_duration = duration;
+}
+
+void use_stored_values(void) {
+    printf("Stored distance: %.2f km\n", stored_distance);
+    printf("Stored duration: %.2f minutes\n", stored_duration);
+}
+
+// optionally add getters to retrieve the values in main.c
+double get_stored_distance(void) {
+    return stored_distance;
+}
+
+double get_stored_duration(void) {
+    return stored_duration;
+}
 struct memory {
     char *response;// pointer to the response data from the json data as a string 
     size_t size; // the size of the json data in bytes 
@@ -89,8 +111,7 @@ char* geocode_address(CURL *curl, const char *address) {
     return coords;
 }
 
-int main() {
-    // initializing useing libcurl -> standard 
+int get_distance_duration(double *distance, double *duration){    // initializing useing libcurl -> standard 
     CURL *curl;
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
@@ -99,16 +120,20 @@ int main() {
         fprintf(stderr, "Failed to init curl\n");
         return 1;
     }
-
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
     //asks for start and end location, while removing the newline character
     char start_address[256], end_address[256];
-    printf("Enter start location: ");
+    printf("Enter start location: \n");
     fgets(start_address, sizeof(start_address), stdin);
     start_address[strcspn(start_address, "\n")] = '\0';  // remove newline
 
-    printf("Enter end location: ");
+    printf("Enter end location: \n");
     fgets(end_address, sizeof(end_address), stdin);
     end_address[strcspn(end_address, "\n")] = '\0';
+
+    printf("Start location: '%s'\n", start_address);
+    printf("End location: '%s'\n", end_address);
 
     //geocodes the start and end using geocode function 
     char *start_coords = geocode_address(curl, start_address);
@@ -151,8 +176,11 @@ int main() {
             cJSON *duration = cJSON_GetObjectItem(firstSegment, "duration");
 
             if (distance && duration) {
-                printf("Distance: %.2f km\n", distance->valuedouble*1.7/1000.0 ); // getting distance in km, 1.7 -> for displacement discrepancy 
-                printf("Duration: %.2f\n", duration->valuedouble*2.3/60); // getting duration in min, 2.3 -> time discrepancy due to displacement > distance 
+                double dist = distance->valuedouble*1.7/ 1000.0; 
+                double dur = duration->valuedouble*2.3 / 60.0; 
+                //printf("Distance: %.2f km\n", distance->valuedouble*1.7/ 1000.0);
+                //printf("Duration: %.2f minutes\n", duration->valuedouble*2.3 / 60.0);
+                set_values(dist, dur);
             }
 
             cJSON_Delete(json);

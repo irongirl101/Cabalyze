@@ -5,10 +5,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h> 
+#include "distancetry.h"
+
+void get_distance_duration(void);
 
 #define MAX_COL 10 
 #define MAX_ROW 100
 #define MAX_LEN 1024 
+
 
 int main(){
    /*//char provider_choice[10]; //considering the user wants to primarily look at uber/ola/namma yatri 
@@ -123,7 +127,7 @@ int main(){
         }
 
    }
-
+    
     // free allocated memory
     for (int i = 0; i < row; i++) {
         for (int j = 0; j < MAX_COL && table[i][j]; j++) {
@@ -131,6 +135,7 @@ int main(){
         }
     }
     }
+    
     return 0; 
 }
 

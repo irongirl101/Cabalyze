@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "ctime": "c"
+        "ctime": "c",
+        "distancetry.h": "c"
     }
 }
