@@ -1,0 +1,49 @@
+Condition,Surge
+Clear,0.5x
+Partly cloudy,0.7x
+Cloudy,0.75x
+Overcast,1x
+Mist,1.1x
+Patchy rain possible,1.2x
+Patchy snow possible,1.3x
+Patchy sleet possible,1.2x
+Patchy freezing drizzle possible,1.4x
+Thundery outbreaks possible,1.5x
+Blowing snow,1.75x
+Blizzard,1.75x
+Fog,1.7x
+Freezing fog,1.8x
+Patchy light drizzle,1.3x
+Light drizzle,1.3x
+Freezing drizzle,1.5x
+Heavy freezing drizzle,1.9x
+Patchy light rain,1.35x
+Light rain,1.5x
+Moderate rain at times,1.6x
+Moderate rain,1.6x
+Heavy rain at times,2x
+Heavy rain,2.5x
+Light freezing rain,1.5x
+Moderate or heavy freezing rain,2.2x
+Light sleet,1.4x
+Moderate or heavy sleet,2.5x
+Patchy light snow,1.6x
+Light snow,1.6x
+Patchy moderate snow,2.2x
+Moderate snow,2.3x
+Patchy heavy snow,2.7x
+Heavy snow,2.4x
+Ice pellets,2.5x
+Light rain shower,1.2x
+Moderate or heavy rain shower,1.8x
+Torrential rain shower,2.2x
+Light sleet showers,1.3x
+Moderate or heavy sleet showers,2x
+Light snow showers,1.5x
+Moderate or heavy snow showers,2.5x
+Light showers of ice pellets,1.6x
+Moderate or heavy showers of ice pellets,1.9x
+Patchy light rain with thunder,1.8x
+Moderate or heavy rain with thunder,2.5x
+Patchy light snow with thunder,2x
+Moderate or heavy snow with thunder,3x

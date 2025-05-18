@@ -4,6 +4,10 @@
 #include <curl/curl.h>
 #include <cjson/cJSON.h> 
 
+#define MAX_COL_W 3 
+#define MAX_ROW_W 100
+#define MAX_LEN_W 1024 
+
 struct MemoryStruct {
     char *memory;
     size_t size;
@@ -152,8 +156,8 @@ int get_current_weather(const char *api_key, double lat, double lon, char *condi
     return 0;
 }
 
-int main() {
-    // Replace with your API keys
+float surge() {
+    
     const char *ors_api_key = "5b3ce3597851110001cf6248f91e18c396fa4c6c833546932b975c1e";
     const char *weather_api_key = "f4f88ef718484d7a89e43834251405";
 
@@ -182,6 +186,50 @@ int main() {
     }
 
     printf("Current weather condition: %s\n", condition);
+
+    FILE *fp = fopen("weathers.csv", "r"); 
+    if(!fp){
+        perror("File not found"); 
+        return EXIT_FAILURE; 
+    } 
+    char line[MAX_LEN_W]; //will be used to tokenize values from 
+    char *table[MAX_ROW_W][MAX_COL_W]; 
+    memset(table, 0, sizeof(table));//essentially clearing up a space in memory(maybe containing junk values), where all the value will be allocating to. as a starter, everything is kept as 0, and pointeres are made null. 
+    int row = 0;
+    
+
+    while (fgets(line,sizeof(line),fp) && row<MAX_ROW_W){
+        line[strcspn(line,"\n")] = '\0'; //ending each line with a line terminator than a newline 
+        int col = 0; 
+        char *tok = strtok(line,","); //delimiter ,; tokenizing each line ->this one splits the string 
+
+        while (tok && col<MAX_COL_W)
+        {
+            table[row][col] = strdup(tok); //creating memeory and store 
+
+            if (table[row][col] == NULL) {
+                perror("Memory allocation failed for strdup");
+                fclose(fp);
+                return EXIT_FAILURE;
+            }
+            col++; 
+            tok = strtok(NULL,","); //-> gets the next token why null? no clude, take it as syntax 
+        }
+        row++; 
+    }
+
+    fclose(fp); 
+    float surge; 
+    for(int i = 1; i<row; i++){
+        //printf("%s \n", table[i][0]); 
+        if(strcasecmp(table[i][0],condition)==0){
+            //printf("%s \n", table[i][0]); 
+            surge = atof(table[i][1]); 
+        }
+
+    }
+    return surge; 
+    //printf("%0.2f\n", surge); 
 
     return 0;
 }

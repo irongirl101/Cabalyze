@@ -14,6 +14,15 @@
 #define MAX_ROW 100
 #define MAX_LEN 1024 
 
+#define MAX_COL_W 3 
+#define MAX_ROW_W 100
+#define MAX_LEN_W 1024 
+
+struct MemoryStruct {
+    char *memory;
+    size_t size;
+};
+
 struct memory {
     char *response;
     size_t size;
@@ -22,6 +31,7 @@ struct memory {
 typedef struct {
     double distance;
     double duration;
+    float surge;
 } RouteInfo;
 
 size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
@@ -38,6 +48,27 @@ size_t write_callback(void *contents, size_t size, size_t nmemb, void *userp) {
 
     return realsize;
 }
+
+static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp) {
+    size_t realsize = size * nmemb;
+    struct MemoryStruct *mem = (struct MemoryStruct *)userp;
+
+    char *ptr = realloc(mem->memory, mem->size + realsize + 1);
+    if(ptr == NULL) {
+        printf("Not enough memory (realloc returned NULL)\n");
+        return 0;
+    }
+
+    mem->memory = ptr;
+    memcpy(&(mem->memory[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->memory[mem->size] = 0;
+
+    return realsize;
+}
+
+int get_current_weather(const char *api_key, double lat, double lon, char *condition_text, size_t condition_size);
+float surge(CURL *curl, const char *address);
 
 // Function to geocode address -> returns coordinates as "lon,lat"
 char* geocode_address(CURL *curl, const char *address) {
@@ -117,6 +148,8 @@ int dist_dur(RouteInfo *info) {
 
     char *start_coords = geocode_address(curl, start_address);
     char *end_coords = geocode_address(curl, end_address);
+
+
 
     if (!start_coords || !end_coords) {
         fprintf(stderr, "Failed to geocode start or end location.\n");
@@ -203,6 +236,11 @@ int dist_dur(RouteInfo *info) {
         }
     }
 
+    float surge_start = surge(curl, start_address);
+    float surge_end   = surge(curl, end_address);
+    float avg_surge   = (surge_start + surge_end) / 2.0f;
+    info->surge = avg_surge;
+
     free(start_coords);
     free(end_coords);
     free(route_chunk.response);
@@ -210,6 +248,121 @@ int dist_dur(RouteInfo *info) {
     curl_global_cleanup();
     return 0;
 }
+
+// Replace your old float surge() with this:
+
+float surge(CURL *curl, const char *address) {
+    const char *weather_api_key = "f4f88ef718484d7a89e43834251405";
+    // 1. Geocode
+    char *coords = geocode_address(curl, address);
+    if (!coords) {
+        fprintf(stderr, "Failed to geocode '%s'\n", address);
+        return 1.0f;
+    }
+    double lon, lat;
+    sscanf(coords, "%lf,%lf", &lon, &lat);
+    free(coords);
+
+    // 2. Get weather condition text
+    char condition[128] = {0};
+    if (!get_current_weather(weather_api_key, lat, lon, condition, sizeof(condition))) {
+        fprintf(stderr, "Failed to get weather for '%s'\n", address);
+        return 1.0f;
+    }
+    // Optional debug
+    // printf("[DEBUG] Condition at '%s': %s\n", address, condition);
+
+    // 3. Lookup surge in CSV
+    FILE *fp = fopen("weathers.csv", "r");
+    if (!fp) {
+        perror("Cannot open weathers.csv");
+        return 1.0f;
+    }
+
+    char line[MAX_LEN_W];
+    float surge_value = 1.0f;            // default if not found
+    while (fgets(line, sizeof(line), fp)) {
+        // strip newline
+        line[strcspn(line, "\r\n")] = '\0';
+        char *csv_cond = strtok(line, ",");
+        char *csv_surge = strtok(NULL, ",");
+        if (csv_cond && csv_surge && strcasecmp(csv_cond, condition) == 0) {
+            surge_value = atof(csv_surge);
+            break;
+        }
+    }
+    fclose(fp);
+    return surge_value;
+}
+
+
+
+int get_current_weather(const char *api_key, double lat, double lon, char *condition_text, size_t condition_size) {
+    CURL *curl;
+    CURLcode res;
+    struct MemoryStruct chunk;
+
+    chunk.memory = malloc(1);
+    chunk.size = 0;
+
+    // Build URL for WeatherAPI current weather
+    char url[512];
+    snprintf(url, sizeof(url),
+        "http://api.weatherapi.com/v1/current.json?key=%s&q=%f,%f",
+        api_key, lat, lon);
+
+    curl = curl_easy_init();
+    if(!curl) {
+        fprintf(stderr, "Failed to init curl\n");
+        free(chunk.memory);
+        return 0;
+    }
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+
+    res = curl_easy_perform(curl);
+    if(res != CURLE_OK) {
+        fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        curl_easy_cleanup(curl);
+        free(chunk.memory);
+        return 0;
+    }
+
+    cJSON *root = cJSON_Parse(chunk.memory);
+    free(chunk.memory);
+    curl_easy_cleanup(curl);
+
+    if(!root) {
+        fprintf(stderr, "JSON parse error\n");
+        return 0;
+    }
+
+    cJSON *current = cJSON_GetObjectItem(root, "current");
+    if(!current) {
+        cJSON_Delete(root);
+        return 0;
+    }
+
+    cJSON *condition = cJSON_GetObjectItem(current, "condition");
+    if(!condition) {
+        cJSON_Delete(root);
+        return 0;
+    }
+
+    cJSON *text = cJSON_GetObjectItem(condition, "text");
+    if(text && cJSON_IsString(text)) {
+        strncpy(condition_text, text->valuestring, condition_size - 1);
+        condition_text[condition_size - 1] = '\0';  // ensure null terminated
+        cJSON_Delete(root);
+        return 1;
+    }
+
+    cJSON_Delete(root);
+    return 0;
+}
+
 
 int main(){
 
@@ -222,6 +375,7 @@ int main(){
 
     printf("Distance: %.2f km\n", route.distance);
     printf("Duration: %.2f min\n", route.duration);
+    printf("Surge: %0.2f\n", route.surge); 
     
    /*//char provider_choice[10]; //considering the user wants to primarily look at uber/ola/namma yatri 
     char provider[100]; 
@@ -266,9 +420,10 @@ int main(){
     printf("Premium? (Yes/No) \n"); 
     scanf("%s", premimum_choice); 
 
-    float surge = 0.75; // for the time being 
+    //float surge_value = surge(); // for the time being 
     float distance = route.distance ; // in km, for the time being 
     float time = route.duration; //will be in minutes, for the time being 
+    float surge_value = route.surge; 
 
     //opening a file
     FILE *fp = fopen("fares.csv", "r"); 
@@ -312,16 +467,19 @@ int main(){
 
    //my info {0:Provider,1:Vehicle Type,2:AC,3:Premium,4:Passengers,5:Base Fare (₹),6:Per Km (₹),7:Per Min (₹),8:Booking Fee (₹)}
 
+    
     float price_flag=0; 
     char type_flag[100] = ""; 
     int passengers_flag; 
     //char provider_flag[] = provider; 
     char provider_flag[100] = ""; 
+
+
    for(int i = 1; i<row; i++){
         if(strcasecmp(provider, "No")!=0){
             if(strcasecmp(table[i][0],provider)==0 && atoi(table[i][4])>=passengers && strcasecmp(table[i][2], ac_choice)==0 && strcasecmp(table[i][3],premimum_choice)==0){
                 float total = atoi(table[i][5]) + (distance*atoi(table[i][6])) + (time*atoi(table[i][7])) + atoi(table[i][8]) ; 
-                float final = total * surge; 
+                float final = total * surge_value; 
                 printf( "Type: %s | Number of Passengers: %s | Estimated Price:%.2f\t", table[i][1],  table[i][4], final); 
                 if (price_flag==0)
                 {
@@ -346,7 +504,7 @@ int main(){
         }
         else if(atoi(table[i][4])>=passengers && strcasecmp(table[i][2], ac_choice)==0 && strcasecmp(table[i][3],premimum_choice)==0){
             float total = atoi(table[i][5]) + (distance*atoi(table[i][6])) + (time*atoi(table[i][7])) + atoi(table[i][8]) ; 
-                float final = total * surge; 
+                float final = total * surge_value; 
                 printf("Provider: %s | Type: %s | Number of Passengers: %s | Price: %.2f\t", table[i][0], table[i][1], table[i][4], final); 
                 if (price_flag==0)
                 {
@@ -370,7 +528,7 @@ int main(){
 
    }
     printf("The best value: \n"); 
-    printf("Provider: %s | Type: %s | Number of Passengers: %d | Price: %.2f\t", provider_flag, type_flag, passengers_flag, price_flag); 
+    printf("Provider: %s | Type: %s | Number of Passengers: %d | Price: %.2f\t \n", provider_flag, type_flag, passengers_flag, price_flag); 
 
     // free allocated memory
     for (int i = 0; i < row; i++) {
