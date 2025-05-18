@@ -1,0 +1,23 @@
+Provider,Vehicle Type,AC,Premium,Passengers,Base Fare (₹),Per Km (₹),Per Min (₹),Booking Fee (₹)
+Uber,Auto,No,No,3,25,6,1,10
+Uber,Moto,No,No,1,15,5,0,10
+Uber,Uber Go,Yes,No,4,35,7,1,12
+Uber,Go Sedan,Yes,No,4,35,7,1,12
+Uber,Go Priority,Yes,Yes,4,35,7,1,12
+Uber,Uber Premier,Yes,Yes,4,35,7,1,12
+Uber,Uber XL,Yes,Yes,6,80,15,2,12
+Uber,Moto Saver,No,No,1,25,5,0,10
+Uber,XL+ (Innova),Yes,Yes,6,80,15,2,12
+Ola,Auto,No,No,3,33,14,1,25
+Ola,Bike,No,No,1,25,5,1,10
+Ola,Mini,Yes,No,4,100,13,1,10
+Ola,Prime Sedan,Yes,No,4,80,16,2,10
+Ola,Prime Plus,Yes,Yes,4,100,24,1,10
+Ola,Prime SUV,Yes,Yes,6,100,17,2,10
+Namma Yatri,Auto,No,No,3,50,16,1,10
+Namma Yatri,Book Any,No,No,4,50,14,1,20
+Namma Yatri,Non AC Cab,No,No,4,40,15,2,25
+Namma Yatri,AC Mini,Yes,No,4,45,16,2,30
+Namma Yatri,Sedan,Yes,No,4,55,18,3,35
+Namma Yatri,XL Cab,Yes,Yes,6,85,24,4,50
+Namma Yatri,XL Premium,Yes,Yes,6,95,26,4,60

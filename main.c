@@ -191,7 +191,7 @@ int dist_dur(RouteInfo *info) {
             if (distance && duration) {
                 //float dist = distance->valuedouble*1.5/ 1000.0; 
                 //float dur = duration->valuedouble*2.3/ 60.0; 
-                info->distance = distance->valuedouble * 1.5 / 1000.0;
+                info->distance = distance->valuedouble * 1.7 / 1000.0;
                 info->duration = duration->valuedouble * 2.3 / 60.0;
                 /*printf("Distance: %.2f km\n", distance->valuedouble*1.5/ 1000.0);
                 printf("Duration: %.2f minutes\n", duration->valuedouble*2.3/ 60.0);*/ 
@@ -312,22 +312,56 @@ int main(){
 
    //my info {0:Provider,1:Vehicle Type,2:AC,3:Premium,4:Passengers,5:Base Fare (₹),6:Per Km (₹),7:Per Min (₹),8:Booking Fee (₹)}
 
+    float price_flag=0; 
+    char type_flag[100] = ""; 
+    int passengers_flag; 
+    //char provider_flag[] = provider; 
+    char provider_flag[100] = ""; 
    for(int i = 1; i<row; i++){
         if(strcasecmp(provider, "No")!=0){
             if(strcasecmp(table[i][0],provider)==0 && atoi(table[i][4])>=passengers && strcasecmp(table[i][2], ac_choice)==0 && strcasecmp(table[i][3],premimum_choice)==0){
                 float total = atoi(table[i][5]) + (distance*atoi(table[i][6])) + (time*atoi(table[i][7])) + atoi(table[i][8]) ; 
                 float final = total * surge; 
                 printf( "Type: %s | Number of Passengers: %s | Estimated Price:%.2f\t", table[i][1],  table[i][4], final); 
+                if (price_flag==0)
+                {
+                    price_flag = final; 
+                    strcpy(type_flag, table[i][1]); 
+                    passengers_flag = atoi(table[i][4]); 
+                    strcpy(provider_flag, provider); 
+                }
+                else if(price_flag>final){
+                    price_flag = final; 
+                    strcpy(type_flag, table[i][1]); 
+                    passengers_flag = atoi(table[i][4]);
+                    strcpy(provider_flag, provider);
+                }
+                
                 //for(int j =0; j<MAX_COL && table[i][j]; j++){
                     //printf("%s\t", table[i][j]); 
                 //}
                 printf("\n"); 
             }
+
         }
         else if(atoi(table[i][4])>=passengers && strcasecmp(table[i][2], ac_choice)==0 && strcasecmp(table[i][3],premimum_choice)==0){
             float total = atoi(table[i][5]) + (distance*atoi(table[i][6])) + (time*atoi(table[i][7])) + atoi(table[i][8]) ; 
                 float final = total * surge; 
                 printf("Provider: %s | Type: %s | Number of Passengers: %s | Price: %.2f\t", table[i][0], table[i][1], table[i][4], final); 
+                if (price_flag==0)
+                {
+                    price_flag = final; 
+                    strcpy(type_flag, table[i][1]); 
+                    passengers_flag = atoi(table[i][4]); 
+                    strcpy(provider_flag, table[i][0]);
+                }
+                else if(price_flag>final){
+                    price_flag = final; 
+                    strcpy(type_flag, table[i][1]); 
+                    passengers_flag = atoi(table[i][4]);
+                    strcpy(provider_flag, table[i][0]);
+                }
+
                 //for(int j =0; j<MAX_COL && table[i][j]; j++){
                     //printf("%s\t", table[i][j]); 
                 //}
@@ -335,7 +369,9 @@ int main(){
         }
 
    }
-    
+    printf("The best value: \n"); 
+    printf("Provider: %s | Type: %s | Number of Passengers: %d | Price: %.2f\t", provider_flag, type_flag, passengers_flag, price_flag); 
+
     // free allocated memory
     for (int i = 0; i < row; i++) {
         for (int j = 0; j < MAX_COL && table[i][j]; j++) {
