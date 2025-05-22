@@ -249,7 +249,6 @@ int dist_dur(RouteInfo *info) {
     return 0;
 }
 
-// Replace your old float surge() with this:
 
 float surge(CURL *curl, const char *address) {
     const char *weather_api_key = "f4f88ef718484d7a89e43834251405";
@@ -269,10 +268,7 @@ float surge(CURL *curl, const char *address) {
         fprintf(stderr, "Failed to get weather for '%s'\n", address);
         return 1.0f;
     }
-    // Optional debug
-    // printf("[DEBUG] Condition at '%s': %s\n", address, condition);
-
-    // 3. Lookup surge in CSV
+    
     FILE *fp = fopen("weathers.csv", "r");
     if (!fp) {
         perror("Cannot open weathers.csv");
