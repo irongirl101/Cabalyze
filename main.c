@@ -381,7 +381,8 @@ int main(){
     printf("Do you have any preference towards provider? If yes, enter the number of providers, else enter 0.\n"); 
     scanf("%d",&provider_choice); */ 
     char provider[100]; //have to figure out a way of getting preferences-> for the time being, take one at a time 
-    printf("Enter preference if any, else type No \n"); 
+    printf("Enter preference if any(Uber,Ola,Namma Yatri), else type No. \n"); 
+   //printf("If you want to comapre against 2 select ones, please enter the one you do not want to include with a minus(-Uber,-Ola,-Namma Yatri)\n");
     //scanf("%s", provider); -> does not work, as namma aytri has a whitespace, and scanf reads till the first whitespace is found 
     //therefore use fgets 
    /* while(getchar()!='\n' && getchar() != EOF); 
@@ -389,15 +390,17 @@ int main(){
     provider[strcspn(provider, "\n")] = '\0'; */
     fgets(provider, sizeof(provider), stdin);
     provider[strcspn(provider, "\n")] = '\0'; // remove newline
+    //what to do in order to get 2 at a time? -> ask if user wants to compare bw 2, only check one, or compare all 
+    //if 2, ask for 2 providers, and give the other. 
 
     if (
         strcasecmp(provider, "Uber") != 0 &&
         strcasecmp(provider, "Ola") != 0 &&
         strcasecmp(provider, "Namma Yatri") != 0 &&
-        strcasecmp(provider, "No") != 0 &&
-        strcasecmp(provider, "no") != 0
+        strcasecmp(provider, "No") != 0 
+
     ) {
-        printf("Please enter an acceptable value (Uber, Ola, Namma Yatri, No)\n"); 
+        printf("Please enter an acceptable value (Uber, Ola, Namma Yatri, No, Yes)\n"); 
         return 1;
     }
 
@@ -521,6 +524,7 @@ int main(){
                 //}
                 printf("\n");
         }
+        
 
    }
     printf("The best value: \n"); 
