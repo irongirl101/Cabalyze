@@ -17,7 +17,7 @@
 #define MAX_COL_W 3 
 #define MAX_ROW_W 100
 #define MAX_LEN_W 1024 
-
+               
 struct MemoryStruct {
     char *memory;
     size_t size;
@@ -224,10 +224,10 @@ int dist_dur(RouteInfo *info) {
             if (distance && duration) {
                 //float dist = distance->valuedouble*1.5/ 1000.0; 
                 //float dur = duration->valuedouble*2.3/ 60.0; 
-                info->distance = distance->valuedouble * 1.7 / 1000.0;
-                info->duration = duration->valuedouble * 2.3 / 60.0;
-                /*printf("Distance: %.2f km\n", distance->valuedouble*1.5/ 1000.0);
-                printf("Duration: %.2f minutes\n", duration->valuedouble*2.3/ 60.0);*/ 
+                info->distance = distance->valuedouble *1.5/ 1000.0;
+                info->duration = duration->valuedouble * 2.5 / 60.0;
+                //printf("Distance: %.2f km\n", distance->valuedouble*1.5/1000);/*1.5/ 1000.0);*/
+                //printf("Duration: %.2f minutes\n", duration->valuedouble*2.5/60.0);  //*2.3 
             }
 
             cJSON_Delete(json);
@@ -361,6 +361,21 @@ int get_current_weather(const char *api_key, double lat, double lon, char *condi
 
 
 int main(){
+    printf("\n");
+    printf("\n"); 
+    printf("\n"); 
+printf("  /$$$$$$            /$$                 /$$                              \n"
+" /$$__  $$          | $$                | $$                              \n"
+"| $$  \\__/  /$$$$$$ | $$$$$$$   /$$$$$$ | $$ /$$   /$$ /$$$$$$$$  /$$$$$$ \n"
+"| $$       |____  $$| $$__  $$ |____  $$| $$| $$  | $$|____ /$$/ /$$__  $$\n"
+"| $$        /$$$$$$$| $$  \\ $$  /$$$$$$$| $$| $$  | $$   /$$$$/ | $$$$$$$$\n"
+"| $$    $$ /$$__  $$| $$  | $$ /$$__  $$| $$| $$  | $$  /$$__/  | $$_____/\n"
+"|  $$$$$$/|  $$$$$$$| $$$$$$$/|  $$$$$$$| $$|  $$$$$$$ /$$$$$$$$|  $$$$$$$\n"
+" \\______/  \\_______/|_______/  \\_______/|__/ \\____  $$|________/ \\_______/\n"
+"                                            /$$  | $$                    \n"
+"                                           |  $$$$$$/                    \n"
+"                                            \\______/                     \n");
+printf("\n"); 
 
     RouteInfo route;
     int result = dist_dur(&route);
@@ -369,9 +384,9 @@ int main(){
         return 1;
     }
 
-    printf("Distance: %.2f km\n", route.distance);
-    printf("Duration: %.2f min\n", route.duration);
-    printf("Surge: %0.2f\n", route.surge); 
+    //printf("Distance: %.2f km\n", route.distance);
+    //printf("Duration: %.2f min\n", route.duration);
+    //printf("Surge: %0.2f\n", route.surge); 
     
    /*//char provider_choice[10]; //considering the user wants to primarily look at uber/ola/namma yatri 
     char provider[100]; 
@@ -416,7 +431,7 @@ int main(){
     printf("AC? (Yes/No) \n"); 
     scanf("%s", ac_choice); 
     char premimum_choice[100];
-    printf("Premium? (Yes/No) \n"); 
+    printf("Premium? (Yes/No)(Please choose Yes if AC is Yes) \n"); 
     scanf("%s", premimum_choice); 
 
     //float surge_value = surge(); // for the time being 
@@ -527,9 +542,15 @@ int main(){
         
 
    }
+    if (price_flag==0.00)
+    {
+        printf("Please enter proper values.\n"); 
+        
+    }
+    else{
     printf("The best value: \n"); 
     printf("Provider: %s | Type: %s | Number of Passengers: %d | Price: %.2f\t \n", provider_flag, type_flag, passengers_flag, price_flag); 
-
+    }
     // free allocated memory
     for (int i = 0; i < row; i++) {
         for (int j = 0; j < MAX_COL && table[i][j]; j++) {
