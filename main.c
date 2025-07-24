@@ -145,6 +145,7 @@ int dist_dur(RouteInfo *info) {
     printf("Enter end location: ");
     fgets(end_address, sizeof(end_address), stdin);
     end_address[strcspn(end_address, "\n")] = '\0';
+    //printf("\n"); 
 
     char *start_coords = geocode_address(curl, start_address);
     char *end_coords = geocode_address(curl, end_address);
@@ -238,7 +239,7 @@ int dist_dur(RouteInfo *info) {
 
     float surge_start = surge(curl, start_address);
     float surge_end   = surge(curl, end_address);
-    float avg_surge   = (surge_start + surge_end) / 2.0f;
+    float avg_surge   = ((surge_start + surge_end) / 2.0f)+0.5 ;
     info->surge = avg_surge;
 
     free(start_coords);
@@ -431,8 +432,9 @@ printf("\n");
     printf("AC? (Yes/No) \n"); 
     scanf("%s", ac_choice); 
     char premimum_choice[100];
-    printf("Premium? (Yes/No)(Please choose Yes if AC is Yes) \n"); 
+    printf("Premium? (Yes/No)\n"); 
     scanf("%s", premimum_choice); 
+    printf("\n"); 
 
     //float surge_value = surge(); // for the time being 
     float distance = route.distance ; // in km, for the time being 
@@ -548,9 +550,11 @@ printf("\n");
         
     }
     else{
+    printf("\n"); 
     printf("The best value: \n"); 
     printf("Provider: %s | Type: %s | Number of Passengers: %d | Price: %.2f\t \n", provider_flag, type_flag, passengers_flag, price_flag); 
     }
+    printf("\n"); 
     // free allocated memory
     for (int i = 0; i < row; i++) {
         for (int j = 0; j < MAX_COL && table[i][j]; j++) {
