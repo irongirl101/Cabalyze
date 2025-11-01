@@ -252,7 +252,7 @@ int dist_dur(RouteInfo *info) {
 
 
 float surge(CURL *curl, const char *address) {
-    const char *weather_api_key = "f4f88ef718484d7a89e43834251405";
+    const char *weather_api_key = "";
     // 1. Geocode
     char *coords = geocode_address(curl, address);
     if (!coords) {
