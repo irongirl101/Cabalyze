@@ -4,7 +4,7 @@
 #include <curl/curl.h>
 #include <cjson/cJSON.h>
 
-#define api_key "5b3ce3597851110001cf6248f91e18c396fa4c6c833546932b975c1e"
+#define api_key ""
 
 struct memory{
     char *responses; 
