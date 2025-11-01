@@ -8,7 +8,7 @@
 #include <curl/curl.h>
 #include <cjson/cJSON.h>
 
-#define API_KEY "5b3ce3597851110001cf6248f91e18c396fa4c6c833546932b975c1e"
+#define API_KEY ""
 
 #define MAX_COL 10 
 #define MAX_ROW 100
