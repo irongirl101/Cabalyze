@@ -158,8 +158,8 @@ int get_current_weather(const char *api_key, double lat, double lon, char *condi
 
 float surge() {
     
-    const char *ors_api_key = "5b3ce3597851110001cf6248f91e18c396fa4c6c833546932b975c1e";
-    const char *weather_api_key = "f4f88ef718484d7a89e43834251405";
+    const char *ors_api_key = "";
+    const char *weather_api_key = "";
 
     const char *address="100 Feet Ring Road, Banashankari Stage III, Dwaraka Nagar, Banashankari, Bengaluru, Karnataka 560085";
 
